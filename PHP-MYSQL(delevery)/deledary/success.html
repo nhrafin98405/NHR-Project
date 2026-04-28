@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Shipment Confirmed — ParcelX</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="particles"></div>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo"><span class="logo-mark">⚡</span>ParcelX</a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="tracking.html">Track</a>
+      <a href="send.html">Send</a>
+      <a href="dashboard.html">Dashboard</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="dashboard.html" class="btn btn-primary">Go to Dashboard →</a>
+    </div>
+  </div>
+</header>
+
+<div class="container success-wrap">
+  <div class="glass success-card">
+    <div class="check">
+      <svg viewBox="0 0 52 52" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 27 l8 8 l16 -18" stroke-dasharray="80" stroke-dashoffset="0"/>
+      </svg>
+    </div>
+    <h1>Shipment Confirmed!</h1>
+    <p class="sub">Your parcel has been booked successfully. Our courier will pick it up shortly.</p>
+
+    <div class="tracking-id">
+      <div class="k">Your tracking ID</div>
+      <div class="v" id="successId">PX-918273</div>
+    </div>
+
+    <div class="success-actions">
+      <a href="tracking.html" class="btn btn-primary">📍 Track Parcel</a>
+      <a href="dashboard.html" class="btn btn-ghost">🗂 Go to Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

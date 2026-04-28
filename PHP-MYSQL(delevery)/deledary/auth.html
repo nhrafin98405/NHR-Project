@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sign in — ParcelX</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="particles"></div>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo"><span class="logo-mark">⚡</span>ParcelX</a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="tracking.html">Track</a>
+      <a href="send.html">Send</a>
+      <a href="dashboard.html">Dashboard</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="send.html" class="btn btn-primary">Send Parcel →</a>
+    </div>
+  </div>
+</header>
+
+<div class="container auth-wrap">
+  <div class="auth-side">
+    <img src="img/courier.png" alt="ParcelX courier" />
+    <h2 style="margin-top:18px;font-size:28px">Welcome to <span style="background:var(--grad-primary);-webkit-background-clip:text;color:transparent">ParcelX</span></h2>
+    <p style="color:var(--muted);max-width:380px;margin:10px auto 0">Sign in to manage your shipments, track deliveries and access your premium dashboard.</p>
+  </div>
+
+  <div class="glass auth-card" style="justify-self:end">
+    <div class="auth-tabs">
+      <button class="active" data-tab="login">Sign in</button>
+      <button data-tab="register">Create account</button>
+    </div>
+
+    <div id="login" class="auth-pane">
+      <div class="field" style="margin-bottom:14px"><label>Email</label><input type="email" placeholder="you@company.com" /></div>
+      <div class="field" style="margin-bottom:14px"><label>Password</label><input type="password" placeholder="••••••••" /></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;font-size:13px;color:var(--muted)">
+        <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" /> Remember me</label>
+        <a href="#" style="color:var(--primary)">Forgot password?</a>
+      </div>
+      <a href="dashboard.html" class="btn btn-primary" style="width:100%;justify-content:center">Sign in →</a>
+      <div style="text-align:center;color:var(--muted);font-size:12px;margin:18px 0">— or continue with —</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="btn btn-ghost" style="justify-content:center">🔵 Google</button>
+        <button class="btn btn-ghost" style="justify-content:center">🍎 Apple</button>
+      </div>
+    </div>
+
+    <div id="register" class="auth-pane" style="display:none">
+      <div class="field" style="margin-bottom:14px"><label>Full name</label><input placeholder="Jane Doe" /></div>
+      <div class="field" style="margin-bottom:14px"><label>Email</label><input type="email" placeholder="you@company.com" /></div>
+      <div class="field" style="margin-bottom:14px"><label>Password</label><input type="password" placeholder="••••••••" /></div>
+      <div style="margin-bottom:18px;font-size:13px;color:var(--muted)"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" /> I agree to the Terms &amp; Privacy</label></div>
+      <a href="dashboard.html" class="btn btn-primary" style="width:100%;justify-content:center">Create account ✨</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

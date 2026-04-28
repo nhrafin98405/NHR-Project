@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard — ParcelX</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="particles"></div>
+
+<div class="dash">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="index.html" class="logo"><span class="logo-mark">⚡</span>ParcelX</a>
+
+    <div class="side-section">Workspace</div>
+    <a class="side-link active" href="dashboard.html">📊 Dashboard</a>
+    <a class="side-link" href="tracking.html">📍 Tracking</a>
+    <a class="side-link" href="send.html">📦 Send Parcel</a>
+    <a class="side-link" href="#">📁 Shipments</a>
+    <a class="side-link" href="#">💳 Billing</a>
+
+    <div class="side-section">Account</div>
+    <a class="side-link" href="#">🛎 Notifications</a>
+    <a class="side-link" href="#">⚙️ Settings</a>
+    <a class="side-link" href="auth.html">↩️ Sign out</a>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="dash-main">
+    <div class="topbar">
+      <div class="search">
+        <span style="color:var(--muted)">🔍</span>
+        <input placeholder="Search parcels, customers, invoices..." />
+      </div>
+      <div class="top-right">
+        <div class="icon-btn">🛎<span class="badge">3</span></div>
+        <div class="icon-btn">✉️</div>
+        <div class="profile">
+          <div class="avatar">SM</div>
+          <div style="font-size:13px"><div style="font-weight:600">Sara Mitchell</div><div style="color:var(--muted);font-size:11px">Pro plan</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-body">
+      <div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:20px;flex-wrap:wrap;gap:14px">
+        <div>
+          <h1 style="font-size:28px">Welcome back, Sara 👋</h1>
+          <p style="color:var(--muted);margin-top:4px">Here's what's happening with your shipments today.</p>
+        </div>
+        <a href="send.html" class="btn btn-primary">+ New Shipment</a>
+      </div>
+
+      <!-- KPIs -->
+      <div class="dash-grid">
+        <div class="glass kpi">
+          <div class="top"><span class="label">Total Shipments</span><div class="ico">📦</div></div>
+          <div class="val" data-count="12482">0</div>
+          <div class="delta">▲ 12.4% this week</div>
+        </div>
+        <div class="glass kpi">
+          <div class="top"><span class="label">In Transit</span><div class="ico blue">🚚</div></div>
+          <div class="val" data-count="384">0</div>
+          <div class="delta">▲ 4.1%</div>
+        </div>
+        <div class="glass kpi">
+          <div class="top"><span class="label">Delivered</span><div class="ico green">✅</div></div>
+          <div class="val" data-count="11820">0</div>
+          <div class="delta">▲ 9.7%</div>
+        </div>
+        <div class="glass kpi">
+          <div class="top"><span class="label">Issues</span><div class="ico red">⚠️</div></div>
+          <div class="val" data-count="14">0</div>
+          <div class="delta down">▼ 2.3%</div>
+        </div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="charts">
+        <div class="glass panel">
+          <h3>Delivery Volume</h3>
+          <p class="sub">Shipments processed over the last 12 months</p>
+          <svg class="line-chart" id="lineChart"></svg>
+        </div>
+        <div class="glass panel">
+          <h3>Delivery Status</h3>
+          <p class="sub">Distribution this month</p>
+          <div class="pie-wrap">
+            <div class="pie"><div class="center"><div class="v">96%</div><div class="l">Success</div></div></div>
+            <div class="legend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE + ACTIVITY -->
+      <div class="split">
+        <div class="glass panel">
+          <h3>Recent Parcels</h3>
+          <p class="sub">Last 5 shipments</p>
+          <div style="overflow-x:auto">
+            <table class="parcels">
+              <thead><tr><th>ID</th><th>Recipient</th><th>Destination</th><th>Status</th><th>ETA</th></tr></thead>
+              <tbody>
+                <tr><td><strong>PX-918273</strong></td><td>Jordan Lee</td><td>San Francisco, CA</td><td><span class="pill transit">In Transit</span></td><td>Today, 4:00 PM</td></tr>
+                <tr><td><strong>PX-918244</strong></td><td>Alex Kim</td><td>Seattle, WA</td><td><span class="pill delivered">Delivered</span></td><td>Yesterday</td></tr>
+                <tr><td><strong>PX-918218</strong></td><td>Maya Singh</td><td>Austin, TX</td><td><span class="pill pending">Pending</span></td><td>Tomorrow</td></tr>
+                <tr><td><strong>PX-918190</strong></td><td>Liam Chen</td><td>New York, NY</td><td><span class="pill delivered">Delivered</span></td><td>2 days ago</td></tr>
+                <tr><td><strong>PX-918177</strong></td><td>Noah Park</td><td>Miami, FL</td><td><span class="pill fail">Failed</span></td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="glass panel activity">
+          <h3>Activity</h3>
+          <p class="sub">Latest events</p>
+          <div class="a-item"><div class="a-ico green">✓</div><div><div class="a-text">PX-918244 delivered to <strong>Alex Kim</strong></div><div class="a-time">12 min ago</div></div></div>
+          <div class="a-item"><div class="a-ico blue">🚚</div><div><div class="a-text">PX-918273 picked up by courier</div><div class="a-time">1 hour ago</div></div></div>
+          <div class="a-item"><div class="a-ico">📦</div><div><div class="a-text">New shipment <strong>PX-918301</strong> created</div><div class="a-time">3 hours ago</div></div></div>
+          <div class="a-item"><div class="a-ico blue">📍</div><div><div class="a-text">PX-918218 reached Austin sort facility</div><div class="a-time">5 hours ago</div></div></div>
+          <div class="a-item"><div class="a-ico green">💳</div><div><div class="a-text">Invoice <strong>#INV-2418</strong> paid</div><div class="a-time">Yesterday</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

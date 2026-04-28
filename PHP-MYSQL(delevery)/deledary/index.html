@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ParcelX — Delivering More Than Just Parcels</title>
+<meta name="description" content="Premium parcel delivery powered by smart logistics. Track, send and manage your parcels in one beautiful dashboard." />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="particles"></div>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo"><span class="logo-mark">⚡</span>ParcelX</a>
+    <nav class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="tracking.html">Track</a>
+      <a href="send.html">Send</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="#features">Features</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="auth.html" class="btn btn-ghost">Sign in</a>
+      <a href="send.html" class="btn btn-primary">Send Parcel →</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero container">
+  <div class="hero-grid">
+    <div>
+      <span class="eyebrow">● Live tracking · 24/7 support</span>
+      <h1>Delivering More Than <span class="grad">Just Parcels</span></h1>
+      <p class="lead">Send, track and manage shipments worldwide with a premium logistics platform built for speed, transparency and trust.</p>
+      <div class="hero-cta">
+        <a href="tracking.html" class="btn btn-primary">📦 Track Parcel</a>
+        <a href="send.html" class="btn btn-ghost">🚚 Send Parcel</a>
+      </div>
+      <form class="glass hero-track" onsubmit="event.preventDefault();location.href='tracking.html'">
+        <span style="padding:0 8px;color:#ff6a00">🔍</span>
+        <input type="text" placeholder="Enter your tracking ID e.g. PX-918273" />
+        <button class="btn btn-primary" type="submit">Track</button>
+      </form>
+    </div>
+    <div class="hero-visual">
+      <div class="chip chip-1"><span class="dot"></span> Out for delivery</div>
+      <div class="chip chip-2">⏱ ETA 12 min</div>
+      <div class="chip chip-3">⭐ 4.9/5 rating</div>
+      <img class="hero-truck" src="img/truck.png" alt="Glowing delivery truck" />
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="block container" id="features">
+  <div class="section-head">
+    <h2>Built for <span style="background:var(--grad-primary);-webkit-background-clip:text;color:transparent">modern logistics</span></h2>
+    <p>Everything you need to ship smarter — from instant quotes to real-time tracking.</p>
+  </div>
+  <div class="features">
+    <div class="glass feature"><div class="icon">⚡</div><h3>Instant Booking</h3><p>Schedule pickups in under 30 seconds with our streamlined flow.</p></div>
+    <div class="glass feature"><div class="icon">📍</div><h3>Live GPS Tracking</h3><p>Watch your parcel move on the map in real time, every step.</p></div>
+    <div class="glass feature"><div class="icon">🛡️</div><h3>Insured Shipping</h3><p>Every package is automatically insured up to $1,000 in value.</p></div>
+    <div class="glass feature"><div class="icon">🌍</div><h3>Global Network</h3><p>Reach 180+ countries through our integrated carrier network.</p></div>
+    <div class="glass feature"><div class="icon">💬</div><h3>24/7 Support</h3><p>Real humans available any time you need help with a shipment.</p></div>
+    <div class="glass feature"><div class="icon">📊</div><h3>Smart Dashboard</h3><p>Manage all your shipments in one beautifully animated workspace.</p></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="block container">
+  <div class="section-head">
+    <h2>How it works</h2>
+    <p>From doorstep to destination in 4 effortless steps.</p>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="num">1</div><h4>Book Pickup</h4><p>Enter parcel details and schedule a pickup time.</p></div>
+    <div class="step"><div class="num">2</div><h4>We Collect</h4><p>Our courier picks up your package from your door.</p></div>
+    <div class="step"><div class="num">3</div><h4>In Transit</h4><p>Track your parcel live as it moves through our network.</p></div>
+    <div class="step"><div class="num">4</div><h4>Delivered</h4><p>Recipient confirms — you get an instant notification.</p></div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="block container">
+  <div class="stats">
+    <div class="glass stat"><div class="num" data-count="25000" data-suffix="+">0</div><div class="label">Parcels delivered</div></div>
+    <div class="glass stat"><div class="num" data-count="12000" data-suffix="+">0</div><div class="label">Active customers</div></div>
+    <div class="glass stat"><div class="num" data-count="180" data-suffix="+">0</div><div class="label">Countries served</div></div>
+    <div class="glass stat"><div class="num" data-count="99" data-suffix="%">0</div><div class="label">On-time rate</div></div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="block container">
+  <div class="section-head">
+    <h2>Loved by businesses worldwide</h2>
+    <p>Hear what our customers say about ParcelX.</p>
+  </div>
+  <div class="tests">
+    <div class="glass test">
+      <div class="stars">★★★★★</div>
+      <p class="quote">“ParcelX completely transformed how we ship. The dashboard alone saves us hours every week.”</p>
+      <div class="who"><div class="avatar">SM</div><div><div class="name">Sara Mitchell</div><div class="role">COO, Northwind Co.</div></div></div>
+    </div>
+    <div class="glass test">
+      <div class="stars">★★★★★</div>
+      <p class="quote">“Live tracking is unreal — our customers literally watch their orders arrive. Game changer.”</p>
+      <div class="who"><div class="avatar">JL</div><div><div class="name">Jordan Lee</div><div class="role">Founder, Bloom &amp; Co.</div></div></div>
+    </div>
+    <div class="glass test">
+      <div class="stars">★★★★★</div>
+      <p class="quote">“The fastest, cleanest logistics platform I've ever used. Worth every cent of the upgrade.”</p>
+      <div class="who"><div class="avatar">AK</div><div><div class="name">Alex Kim</div><div class="role">Ops Lead, Pixel Mart</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div>
+        <a href="#" class="logo"><span class="logo-mark">⚡</span>ParcelX</a>
+        <p style="color:var(--muted);font-size:14px;margin-top:14px;max-width:320px">Premium parcel delivery built on a global smart logistics network.</p>
+      </div>
+      <div><h5>Product</h5><ul><li><a href="tracking.html">Tracking</a></li><li><a href="send.html">Send Parcel</a></li><li><a href="dashboard.html">Dashboard</a></li><li><a href="#">Pricing</a></li></ul></div>
+      <div><h5>Company</h5><ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li><li><a href="#">Contact</a></li></ul></div>
+      <div><h5>Contact</h5><ul><li>support@parcelx.io</li><li>+1 (555) 010-9182</li><li>San Francisco, CA</li></ul></div>
+    </div>
+    <div class="copy">© 2026 ParcelX. Crafted with ⚡ in the cloud.</div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Send a Parcel — ParcelX</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="particles"></div>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="index.html" class="logo"><span class="logo-mark">⚡</span>ParcelX</a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="tracking.html">Track</a>
+      <a href="send.html" class="active">Send</a>
+      <a href="dashboard.html">Dashboard</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="auth.html" class="btn btn-ghost">Sign in</a>
+      <a href="send.html" class="btn btn-primary">Send Parcel →</a>
+    </div>
+  </div>
+</header>
+
+<section class="page-head container">
+  <span class="eyebrow">● 4 quick steps</span>
+  <h1>Send a <span style="background:var(--grad-primary);-webkit-background-clip:text;color:transparent">Parcel</span></h1>
+  <p>Tell us a bit about your shipment and we'll handle the rest.</p>
+</section>
+
+<div class="container" style="position:relative;z-index:2">
+  <div class="stepper">
+    <div class="bar"></div>
+    <div class="s-step active"><div class="circle">1</div><div class="lbl">Sender</div></div>
+    <div class="s-step"><div class="circle">2</div><div class="lbl">Receiver</div></div>
+    <div class="s-step"><div class="circle">3</div><div class="lbl">Parcel</div></div>
+    <div class="s-step"><div class="circle">4</div><div class="lbl">Confirm</div></div>
+  </div>
+
+  <form id="sendForm" class="glass form-card" onsubmit="event.preventDefault()">
+    <!-- Step 1 -->
+    <div class="fpane active">
+      <h3 style="margin-bottom:6px">Sender details</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:22px">Where is the parcel coming from?</p>
+      <div class="form-grid">
+        <div class="field"><label>Full name</label><input id="sname" placeholder="Sara Mitchell" value="Sara Mitchell" /></div>
+        <div class="field"><label>Phone</label><input id="sphone" placeholder="+1 555 010 1234" value="+1 555 010 1234" /></div>
+        <div class="field full"><label>Pickup address</label><input id="saddr" placeholder="123 Market St, San Francisco, CA" value="123 Market St, San Francisco, CA" /></div>
+        <div class="field"><label>City</label><input placeholder="San Francisco" value="San Francisco" /></div>
+        <div class="field"><label>Postal code</label><input placeholder="94103" value="94103" /></div>
+      </div>
+      <div class="form-actions"><span></span><button class="btn btn-primary" data-next>Continue →</button></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="fpane">
+      <h3 style="margin-bottom:6px">Receiver details</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:22px">Who's receiving the parcel?</p>
+      <div class="form-grid">
+        <div class="field"><label>Full name</label><input id="rname" placeholder="Jordan Lee" /></div>
+        <div class="field"><label>Phone</label><input id="rphone" placeholder="+1 555 020 5678" /></div>
+        <div class="field full"><label>Delivery address</label><input id="raddr" placeholder="500 Brannan St, San Francisco, CA" /></div>
+        <div class="field"><label>City</label><input placeholder="San Francisco" /></div>
+        <div class="field"><label>Postal code</label><input placeholder="94107" /></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" data-prev>← Back</button>
+        <button class="btn btn-primary" data-next>Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="fpane">
+      <h3 style="margin-bottom:6px">Parcel details</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:22px">Tell us about the package.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Service type</label>
+          <select id="ptype">
+            <option value="standard">Standard (2-4 days)</option>
+            <option value="express">Express (1-2 days)</option>
+            <option value="overnight">Overnight</option>
+          </select>
+        </div>
+        <div class="field"><label>Weight (kg)</label><input id="weight" type="number" min="0.1" step="0.1" value="2.5" /></div>
+        <div class="field"><label>Dimensions (cm)</label><input placeholder="30 × 20 × 15" value="30 × 20 × 15" /></div>
+        <div class="field"><label>Declared value ($)</label><input type="number" value="120" /></div>
+        <div class="field full"><label>Notes for courier</label><textarea id="notes" rows="3" placeholder="Fragile — handle with care"></textarea></div>
+      </div>
+      <div class="price-preview">
+        <div>
+          <div style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em">Estimated price</div>
+          <div style="font-size:13px;color:#dfe4f0;margin-top:4px">Includes insurance &amp; tracking</div>
+        </div>
+        <div class="price" id="price">$9.75</div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" data-prev>← Back</button>
+        <button class="btn btn-primary" data-next>Review →</button>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="fpane">
+      <h3 style="margin-bottom:6px">Review &amp; confirm</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:22px">Make sure everything looks right.</p>
+      <div id="summary" class="summary"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" data-prev>← Back</button>
+        <button id="submitParcel" class="btn btn-primary">Confirm &amp; Pay 🚀</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="copy">© 2026 ParcelX. Crafted with ⚡ in the cloud.</div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
