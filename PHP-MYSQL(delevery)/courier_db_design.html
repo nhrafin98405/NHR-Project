@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Courier Management System — Database Design</title>
+<style>
+  /* ---------- Theme tokens ---------- */
+  :root{
+    --bg: #f4f6fb;
+    --bg-grad-1: #eef2ff;
+    --bg-grad-2: #f5f7ff;
+    --panel: #ffffff;
+    --panel-border: #e3e8f0;
+    --text: #1f2937;
+    --text-muted: #6b7280;
+    --pk: #fef3c7;
+    --pk-text: #92400e;
+    --fk: #dbeafe;
+    --fk-text: #1e40af;
+    --row-border: #eef0f4;
+    --row-hover: #f8fafc;
+    --shadow: 0 4px 14px rgba(15,23,42,.06), 0 2px 4px rgba(15,23,42,.04);
+    --line: #c7d0e0;
+    --line-active: #1e3a8a;
+    --legend-bg: #ffffff;
+    --header-text: #ffffff;
+    --chip-bg: #ffffff;
+    --chip-border: #e5e7eb;
+    --note-bg: #ffffff;
+    --transition: .25s ease;
+  }
+  .dark{
+    --bg: #0b1220;
+    --bg-grad-1: #0d1426;
+    --bg-grad-2: #0a0f1d;
+    --panel: #121a2c;
+    --panel-border: #1f2a44;
+    --text: #e5e7eb;
+    --text-muted: #94a3b8;
+    --pk: #4a3a14;
+    --pk-text: #fde68a;
+    --fk: #16345e;
+    --fk-text: #93c5fd;
+    --row-border: #1b2540;
+    --row-hover: #182241;
+    --shadow: 0 6px 20px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.35);
+    --line: #3a4a6b;
+    --line-active: #93c5fd;
+    --legend-bg: #121a2c;
+    --header-text: #ffffff;
+    --chip-bg: #121a2c;
+    --chip-border: #1f2a44;
+    --note-bg: #121a2c;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: linear-gradient(180deg, var(--bg-grad-1), var(--bg-grad-2));
+    min-height: 100vh;
+    transition: background-color var(--transition), color var(--transition);
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 22px 36px 8px;
+  }
+  .brand{
+    display:flex; align-items:center; gap:14px;
+  }
+  .brand-icon{
+    width:44px;height:44px;border-radius:12px;
+    background: linear-gradient(135deg,#6366f1,#8b5cf6);
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    box-shadow: 0 6px 18px rgba(99,102,241,.35);
+  }
+  .brand h1{font-size:22px;margin:0;font-weight:700;letter-spacing:-.2px}
+  .brand p{margin:2px 0 0;font-size:13px;color:var(--text-muted)}
+
+  .controls{display:flex;gap:10px;align-items:center}
+  .btn{
+    background: var(--chip-bg);
+    border:1px solid var(--chip-border);
+    color: var(--text);
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor:pointer;
+    display:inline-flex;align-items:center;gap:8px;
+    box-shadow: var(--shadow);
+    transition: background var(--transition), color var(--transition), border-color var(--transition), transform .15s ease;
+  }
+  .btn:hover{transform: translateY(-1px)}
+  .btn.active{
+    background: linear-gradient(135deg,#6366f1,#8b5cf6);
+    color:#fff;border-color: transparent;
+  }
+
+  /* ---------- Legend ---------- */
+  .legend{
+    display:flex; gap:18px; flex-wrap:wrap;
+    background: var(--legend-bg);
+    border:1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin: 14px 36px 0;
+    box-shadow: var(--shadow);
+  }
+  .legend .item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+  .swatch{width:14px;height:14px;border-radius:4px;border:1px solid var(--chip-border)}
+  .sw-pk{background:#fef3c7;border-color:#fcd34d}
+  .sw-fk{background:#dbeafe;border-color:#93c5fd}
+  .sw-line{background: linear-gradient(90deg,#c7d0e0,#1e3a8a)}
+  .sw-rel{background: linear-gradient(135deg,#6366f1,#8b5cf6)}
+
+  /* ---------- Diagram canvas ---------- */
+  .canvas-wrap{
+    position:relative;
+    margin: 22px 36px 28px;
+  }
+  #connections{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+    z-index: 1;
+  }
+  .grid{
+    position:relative;
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 70px 90px;
+    z-index: 2;
+  }
+
+  /* ---------- Table card ---------- */
+  .table{
+    background: var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: border-color var(--transition), background var(--transition);
+    position: relative;
+  }
+  .table-header{
+    padding: 12px 14px;
+    color: var(--header-text);
+    display:flex;align-items:center;gap:10px;
+    font-weight:700;font-size:14px;
+    letter-spacing:.2px;
+  }
+  .table-header .ico{
+    width:26px;height:26px;border-radius:7px;
+    background: rgba(255,255,255,.22);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .table-body{padding: 6px 0}
+  .row{
+    display:grid;
+    grid-template-columns: 16px 1fr auto;
+    gap: 10px;
+    padding: 8px 14px;
+    border-top: 1px solid var(--row-border);
+    align-items:center;
+    font-size: 13px;
+    transition: background var(--transition), opacity var(--transition);
+  }
+  .row:first-child{border-top:none}
+  .row .name{color:var(--text);font-weight:500}
+  .row .type{color:var(--text-muted);font-size:11.5px;font-family: ui-monospace, SFMono-Regular, Menlo, monospace}
+  .badge{
+    font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;letter-spacing:.4px;
+  }
+  .badge.pk{background:var(--pk);color:var(--pk-text)}
+  .badge.fk{background:var(--fk);color:var(--fk-text)}
+  .key-ico{display:flex;align-items:center;justify-content:center;color:var(--text-muted)}
+
+  /* Table header gradients */
+  .g-indigo{background: linear-gradient(135deg,#6366f1,#8b5cf6)}
+  .g-blue  {background: linear-gradient(135deg,#3b82f6,#06b6d4)}
+  .g-emerald{background: linear-gradient(135deg,#10b981,#059669)}
+  .g-amber {background: linear-gradient(135deg,#f59e0b,#ef4444)}
+  .g-pink  {background: linear-gradient(135deg,#ec4899,#d946ef)}
+  .g-teal  {background: linear-gradient(135deg,#14b8a6,#0ea5e9)}
+  .g-violet{background: linear-gradient(135deg,#8b5cf6,#6366f1)}
+  .g-rose  {background: linear-gradient(135deg,#f43f5e,#ec4899)}
+  .g-slate {background: linear-gradient(135deg,#475569,#1e293b)}
+  .g-orange{background: linear-gradient(135deg,#fb923c,#f59e0b)}
+
+  /* ---------- Notes section ---------- */
+  .notes{
+    margin: 0 36px 36px;
+    background: var(--note-bg);
+    border:1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 22px 26px;
+    box-shadow: var(--shadow);
+  }
+  .notes h2{margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:10px}
+  .notes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .note{
+    border:1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 14px;
+    background: var(--panel);
+  }
+  .note h3{margin:0 0 8px;font-size:13px;display:flex;align-items:center;gap:8px;color:var(--text)}
+  .note p{margin:0;font-size:12.5px;color:var(--text-muted);line-height:1.55}
+  .note .dot{width:8px;height:8px;border-radius:50%}
+
+  /* ---------- Connection lines ---------- */
+  .link{
+    fill:none;
+    stroke: var(--line);
+    stroke-width: 2.4;
+    opacity: .85;
+    transition: stroke var(--transition), opacity var(--transition), stroke-width var(--transition);
+  }
+  .link.dim{opacity:.18}
+  .link.active{
+    stroke: var(--line-active);
+    stroke-width: 3;
+    opacity: 1;
+  }
+
+  /* ---------- Filter mode highlights ---------- */
+  .filter-on .row.unrelated{display:none}
+  .filter-on .row.related{
+    background: var(--rel-color, transparent) !important;
+  }
+  .filter-on .row.related .name,
+  .filter-on .row.related .type{color:#0b1220 !important}
+  .dark.filter-on .row.related .name,
+  .dark.filter-on .row.related .type{color:#0b1220 !important}
+
+  /* ---------- Footer ---------- */
+  .footer{
+    text-align:center;font-size:12px;color:var(--text-muted);padding:0 0 30px;
+  }
+
+  @media (max-width: 1280px){
+    .grid{grid-template-columns: repeat(3,1fr)}
+  }
+  @media (max-width: 960px){
+    .grid{grid-template-columns: repeat(2,1fr); gap:60px 50px}
+    .notes-grid{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width: 640px){
+    .grid{grid-template-columns: 1fr}
+    .notes-grid{grid-template-columns:1fr}
+    .topbar{padding:16px}
+    .legend,.canvas-wrap,.notes{margin-left:16px;margin-right:16px}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+    </div>
+    <div>
+      <h1>Courier Management System</h1>
+      <p>Database Schema Design · 10 Tables · Relational Model</p>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="btn" id="filterBtn" title="Show only connected fields">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      Connected Only
+    </button>
+    <button class="btn" id="themeBtn" title="Toggle theme">
+      <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <span id="themeLabel">Dark</span>
+    </button>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="item"><span class="swatch sw-pk"></span> Primary Key (PK)</div>
+  <div class="item"><span class="swatch sw-fk"></span> Foreign Key (FK)</div>
+  <div class="item"><span class="swatch sw-line"></span> Relationship Line</div>
+  <div class="item"><span class="swatch sw-rel"></span> Gradient Header</div>
+  <div class="item" style="margin-left:auto;color:var(--text-muted)">Hover any table to highlight its relationships</div>
+</div>
+
+<div class="canvas-wrap" id="canvas">
+  <svg id="connections" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="notes">
+  <h2>📘 Database Design Notes</h2>
+  <div class="notes-grid">
+    <div class="note">
+      <h3><span class="dot" style="background:#6366f1"></span> Normalization</h3>
+      <p>Schema follows 3NF principles. Each table holds a single responsibility; redundant data is eliminated through foreign key references.</p>
+    </div>
+    <div class="note">
+      <h3><span class="dot" style="background:#10b981"></span> Indexing Strategy</h3>
+      <p>Primary keys are auto-indexed. Additional indexes on tracking_number, customer_email, and status fields for fast lookups.</p>
+    </div>
+    <div class="note">
+      <h3><span class="dot" style="background:#f59e0b"></span> Audit & History</h3>
+      <p>Tracking_history and payments retain immutable rows for full audit traceability across the shipment lifecycle.</p>
+    </div>
+    <div class="note">
+      <h3><span class="dot" style="background:#ec4899"></span> Roles & Access</h3>
+      <p>Users table supports admin, operator, courier, and customer roles, enforced through application-layer authorization.</p>
+    </div>
+    <div class="note">
+      <h3><span class="dot" style="background:#14b8a6"></span> Geo Routing</h3>
+      <p>Branches and routes model the courier network. Shipments link origin and destination branches for route optimization.</p>
+    </div>
+    <div class="note">
+      <h3><span class="dot" style="background:#f43f5e"></span> Payments</h3>
+      <p>Payments are tied to shipments via FK. Supports multiple methods: cash on delivery, card, mobile banking, wallet.</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">© 2026 Courier Management System · Pixel-perfect schema visualization</div>
+
+<script>
+/* ---------- Schema definition ---------- */
+const tables = [
+  { id:'users', name:'users', icon:'👤', color:'g-indigo',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'name', t:'VARCHAR(120)'},
+      {n:'email', t:'VARCHAR(180)'},
+      {n:'password_hash', t:'VARCHAR(255)'},
+      {n:'role', t:'ENUM'},
+      {n:'phone', t:'VARCHAR(20)'},
+      {n:'created_at', t:'TIMESTAMP'},
+    ]},
+  { id:'customers', name:'customers', icon:'🧑‍💼', color:'g-blue',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'user_id', t:'BIGINT', k:'fk', ref:'users.id'},
+      {n:'company', t:'VARCHAR(150)'},
+      {n:'address', t:'TEXT'},
+      {n:'city', t:'VARCHAR(80)'},
+      {n:'country', t:'VARCHAR(80)'},
+      {n:'created_at', t:'TIMESTAMP'},
+    ]},
+  { id:'branches', name:'branches', icon:'🏢', color:'g-emerald',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'name', t:'VARCHAR(120)'},
+      {n:'code', t:'VARCHAR(20)'},
+      {n:'city', t:'VARCHAR(80)'},
+      {n:'manager_id', t:'BIGINT', k:'fk', ref:'users.id'},
+      {n:'phone', t:'VARCHAR(20)'},
+    ]},
+  { id:'couriers', name:'couriers', icon:'🛵', color:'g-amber',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'user_id', t:'BIGINT', k:'fk', ref:'users.id'},
+      {n:'branch_id', t:'BIGINT', k:'fk', ref:'branches.id'},
+      {n:'vehicle_no', t:'VARCHAR(40)'},
+      {n:'license_no', t:'VARCHAR(40)'},
+      {n:'status', t:'ENUM'},
+    ]},
+  { id:'shipments', name:'shipments', icon:'📦', color:'g-pink',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'tracking_number', t:'VARCHAR(40)'},
+      {n:'customer_id', t:'BIGINT', k:'fk', ref:'customers.id'},
+      {n:'origin_branch_id', t:'BIGINT', k:'fk', ref:'branches.id'},
+      {n:'dest_branch_id', t:'BIGINT', k:'fk', ref:'branches.id'},
+      {n:'courier_id', t:'BIGINT', k:'fk', ref:'couriers.id'},
+      {n:'weight_kg', t:'DECIMAL'},
+      {n:'status', t:'ENUM'},
+      {n:'created_at', t:'TIMESTAMP'},
+    ]},
+  { id:'tracking_history', name:'tracking_history', icon:'🛰️', color:'g-teal',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'shipment_id', t:'BIGINT', k:'fk', ref:'shipments.id'},
+      {n:'location', t:'VARCHAR(150)'},
+      {n:'status', t:'VARCHAR(50)'},
+      {n:'updated_by', t:'BIGINT', k:'fk', ref:'users.id'},
+      {n:'created_at', t:'TIMESTAMP'},
+    ]},
+  { id:'payments', name:'payments', icon:'💳', color:'g-violet',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'shipment_id', t:'BIGINT', k:'fk', ref:'shipments.id'},
+      {n:'amount', t:'DECIMAL'},
+      {n:'method', t:'ENUM'},
+      {n:'status', t:'ENUM'},
+      {n:'paid_at', t:'TIMESTAMP'},
+    ]},
+  { id:'routes', name:'routes', icon:'🗺️', color:'g-rose',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'from_branch_id', t:'BIGINT', k:'fk', ref:'branches.id'},
+      {n:'to_branch_id', t:'BIGINT', k:'fk', ref:'branches.id'},
+      {n:'distance_km', t:'DECIMAL'},
+      {n:'eta_hours', t:'DECIMAL'},
+    ]},
+  { id:'invoices', name:'invoices', icon:'🧾', color:'g-orange',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'shipment_id', t:'BIGINT', k:'fk', ref:'shipments.id'},
+      {n:'customer_id', t:'BIGINT', k:'fk', ref:'customers.id'},
+      {n:'total', t:'DECIMAL'},
+      {n:'issued_at', t:'TIMESTAMP'},
+    ]},
+  { id:'audit_logs', name:'audit_logs', icon:'📝', color:'g-slate',
+    fields:[
+      {n:'id', t:'BIGINT', k:'pk'},
+      {n:'user_id', t:'BIGINT', k:'fk', ref:'users.id'},
+      {n:'action', t:'VARCHAR(120)'},
+      {n:'entity', t:'VARCHAR(80)'},
+      {n:'created_at', t:'TIMESTAMP'},
+    ]},
+];
+
+/* ---------- Render tables ---------- */
+const grid = document.getElementById('grid');
+tables.forEach(t=>{
+  const card = document.createElement('div');
+  card.className = 'table';
+  card.dataset.id = t.id;
+  card.innerHTML = `
+    <div class="table-header ${t.color}">
+      <div class="ico">${t.icon}</div>
+      <div>${t.name}</div>
+    </div>
+    <div class="table-body">
+      ${t.fields.map(f=>`
+        <div class="row" data-field="${f.n}">
+          <div class="key-ico">${f.k==='pk'
+            ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>'
+            : f.k==='fk'
+              ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>'
+              : ''}
+          </div>
+          <div>
+            <div class="name">${f.n}</div>
+            <div class="type">${f.t}${f.ref?` → ${f.ref}`:''}</div>
+          </div>
+          <div>${f.k==='pk'?'<span class="badge pk">PK</span>':f.k==='fk'?'<span class="badge fk">FK</span>':''}</div>
+        </div>
+      `).join('')}
+    </div>`;
+  grid.appendChild(card);
+});
+
+/* ---------- Build relationships ---------- */
+const relationships = []; // {from:{table,field}, to:{table,field}, id}
+tables.forEach(t=>{
+  t.fields.forEach(f=>{
+    if(f.k==='fk' && f.ref){
+      const [tt, tf] = f.ref.split('.');
+      relationships.push({
+        id: `${t.id}.${f.n}->${tt}.${tf}`,
+        from:{table:t.id, field:f.n},
+        to:{table:tt, field:tf},
+      });
+    }
+  });
+});
+
+/* ---------- Group connected fields with colors ---------- */
+// Each relationship endpoints belong to the same group.
+// We union-find tables that share relationships -> one color per related cluster of FIELDS sharing a referenced PK.
+const groupColors = ['#fde68a','#bfdbfe','#bbf7d0','#fecaca','#ddd6fe','#fbcfe8','#a5f3fc','#fed7aa','#c7d2fe','#fcd34d'];
+const fieldGroup = new Map(); // "table.field" -> groupIndex
+let groupIdx = 0;
+// Group by referenced PK target
+const targetToGroup = new Map();
+relationships.forEach(r=>{
+  const targetKey = `${r.to.table}.${r.to.field}`;
+  if(!targetToGroup.has(targetKey)){
+    targetToGroup.set(targetKey, groupIdx++);
+  }
+  const g = targetToGroup.get(targetKey);
+  fieldGroup.set(`${r.from.table}.${r.from.field}`, g);
+  fieldGroup.set(targetKey, g);
+});
+
+/* ---------- Draw SVG lines ---------- */
+const svg = document.getElementById('connections');
+const canvas = document.getElementById('canvas');
+
+function getRowCenter(tableId, fieldName){
+  const card = grid.querySelector(`.table[data-id="${tableId}"]`);
+  if(!card) return null;
+  const row = card.querySelector(`.row[data-field="${fieldName}"]`) || card;
+  const cRect = canvas.getBoundingClientRect();
+  const rRect = row.getBoundingClientRect();
+  const tRect = card.getBoundingClientRect();
+  return {
+    leftX: tRect.left - cRect.left,
+    rightX: tRect.right - cRect.left,
+    y: rRect.top - cRect.top + rRect.height/2,
+    centerX: (tRect.left + tRect.right)/2 - cRect.left,
+  };
+}
+
+function drawLines(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.innerHTML = '';
+  relationships.forEach(r=>{
+    const a = getRowCenter(r.from.table, r.from.field);
+    const b = getRowCenter(r.to.table, r.to.field);
+    if(!a||!b) return;
+    // pick sides based on relative position
+    const fromRight = a.centerX < b.centerX;
+    const x1 = fromRight ? a.rightX : a.leftX;
+    const x2 = fromRight ? b.leftX  : b.rightX;
+    const y1 = a.y, y2 = b.y;
+    const dx = Math.max(40, Math.abs(x2-x1)*0.45);
+    const c1x = fromRight ? x1+dx : x1-dx;
+    const c2x = fromRight ? x2-dx : x2+dx;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', `M ${x1} ${y1} C ${c1x} ${y1}, ${c2x} ${y2}, ${x2} ${y2}`);
+    path.setAttribute('class','link');
+    path.dataset.from = r.from.table;
+    path.dataset.to   = r.to.table;
+    path.dataset.id   = r.id;
+    svg.appendChild(path);
+  });
+}
+
+drawLines();
+window.addEventListener('resize', drawLines);
+const ro = new ResizeObserver(drawLines);
+ro.observe(canvas);
+
+/* ---------- Hover highlight ---------- */
+function setHover(tableId){
+  const links = svg.querySelectorAll('.link');
+  if(!tableId){
+    links.forEach(l=>l.classList.remove('active','dim'));
+    return;
+  }
+  links.forEach(l=>{
+    if(l.dataset.from===tableId || l.dataset.to===tableId){
+      l.classList.add('active'); l.classList.remove('dim');
+    } else {
+      l.classList.add('dim'); l.classList.remove('active');
+    }
+  });
+}
+grid.querySelectorAll('.table').forEach(card=>{
+  card.addEventListener('mouseenter', ()=>setHover(card.dataset.id));
+  card.addEventListener('mouseleave', ()=>setHover(null));
+});
+
+/* ---------- Theme toggle ---------- */
+const themeBtn = document.getElementById('themeBtn');
+const themeLabel = document.getElementById('themeLabel');
+function applyTheme(t){
+  document.documentElement.classList.toggle('dark', t==='dark');
+  document.body.classList.toggle('dark', t==='dark');
+  themeLabel.textContent = t==='dark' ? 'Light' : 'Dark';
+  try{ localStorage.setItem('cms_theme', t);}catch(e){}
+}
+let saved='light';
+try{ saved = localStorage.getItem('cms_theme') || 'light'; }catch(e){}
+applyTheme(saved);
+themeBtn.addEventListener('click', ()=>{
+  const cur = document.body.classList.contains('dark') ? 'dark' : 'light';
+  applyTheme(cur==='dark' ? 'light' : 'dark');
+  setTimeout(drawLines, 280);
+});
+
+/* ---------- Connected Fields Filter ---------- */
+const filterBtn = document.getElementById('filterBtn');
+let filterOn = false;
+function applyFilter(){
+  document.body.classList.toggle('filter-on', filterOn);
+  filterBtn.classList.toggle('active', filterOn);
+  document.querySelectorAll('.table').forEach(card=>{
+    const tid = card.dataset.id;
+    card.querySelectorAll('.row').forEach(row=>{
+      const fname = row.dataset.field;
+      const key = `${tid}.${fname}`;
+      const g = fieldGroup.get(key);
+      row.classList.remove('related','unrelated');
+      row.style.removeProperty('--rel-color');
+      if(filterOn){
+        if(g!==undefined){
+          row.classList.add('related');
+          row.style.setProperty('--rel-color', groupColors[g % groupColors.length]);
+        } else {
+          row.classList.add('unrelated');
+        }
+      }
+    });
+  });
+  setTimeout(drawLines, 50);
+}
+filterBtn.addEventListener('click', ()=>{ filterOn = !filterOn; applyFilter(); });
+
+</script>
+</body>
+</html>
