@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Database Schema Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* ─── CSS Variables (Light & Dark Themes) ─────────────────────── */
+:root {
+  --bg:           #f0f2f8;
+  --surface:      rgba(255,255,255,0.72);
+  --surface-hover:rgba(255,255,255,0.92);
+  --border:       rgba(120,130,180,0.18);
+  --text:         #1a1d2e;
+  --text-muted:   #6b7280;
+  --text-mono:    #3b4a6b;
+  --shadow:       0 8px 32px rgba(60,80,160,0.10), 0 2px 8px rgba(60,80,160,0.07);
+  --shadow-hover: 0 16px 48px rgba(60,80,160,0.18), 0 4px 16px rgba(60,80,160,0.10);
+  --pk-bg:        #fff3cd;
+  --pk-border:    #f59e0b;
+  --pk-text:      #92400e;
+  --fk-bg:        #e0f2fe;
+  --fk-border:    #0ea5e9;
+  --fk-text:      #0c4a6e;
+  --highlight-bg: #fef9c3;
+  --accent:       #6366f1;
+  --btn-bg:       rgba(99,102,241,0.10);
+  --btn-border:   rgba(99,102,241,0.30);
+  --btn-text:     #4338ca;
+  --glass-blur:   16px;
+  --radius:       14px;
+  --transition:   0.3s cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"] {
+  --bg:           #0f1117;
+  --surface:      rgba(25,28,42,0.82);
+  --surface-hover:rgba(35,38,58,0.96);
+  --border:       rgba(120,130,200,0.14);
+  --text:         #e8eaf6;
+  --text-muted:   #8892b0;
+  --text-mono:    #a5b4fc;
+  --shadow:       0 8px 32px rgba(0,0,0,0.40), 0 2px 8px rgba(0,0,0,0.30);
+  --shadow-hover: 0 16px 48px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.35);
+  --pk-bg:        #3b2a00;
+  --pk-border:    #d97706;
+  --pk-text:      #fcd34d;
+  --fk-bg:        #082032;
+  --fk-border:    #0284c7;
+  --fk-text:      #7dd3fc;
+  --highlight-bg: #1e1a00;
+  --btn-bg:       rgba(99,102,241,0.18);
+  --btn-border:   rgba(99,102,241,0.40);
+  --btn-text:     #a5b4fc;
+}
+
+/* ─── Reset & Base ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+  overflow-x: hidden;
+}
+
+/* ─── Animated background mesh ───────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 15%, rgba(99,102,241,0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(14,165,233,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(244,114,182,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 15%, rgba(99,102,241,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(14,165,233,0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(244,114,182,0.08) 0%, transparent 60%);
+}
+
+/* ─── Header ──────────────────────────────────────────────────── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 2px 16px rgba(60,80,160,0.06);
+  transition: background var(--transition);
+}
+.header-left { display: flex; align-items: center; gap: 1rem; }
+.logo {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700; font-size: 1.1rem;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+.logo span { color: var(--text-muted); font-weight: 400; }
+.header-right { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+/* ─── Buttons ─────────────────────────────────────────────────── */
+button {
+  cursor: pointer; border: none; outline: none;
+  font-family: 'Syne', sans-serif; font-weight: 600;
+  transition: all var(--transition);
+}
+.btn {
+  padding: 0.45rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  color: var(--btn-text);
+  letter-spacing: 0.01em;
+  display: flex; align-items: center; gap: 0.4rem;
+  white-space: nowrap;
+}
+.btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.15); }
+.btn:active { transform: translateY(0); }
+.btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn-theme {
+  width: 38px; height: 38px; padding: 0;
+  border-radius: 50%;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  color: var(--btn-text);
+  font-size: 1.1rem;
+  display: grid; place-items: center;
+}
+.zoom-controls { display: flex; gap: 0.3rem; }
+
+/* ─── Main canvas area ────────────────────────────────────────── */
+#app {
+  position: relative; z-index: 1;
+  padding: 2rem;
+}
+
+/* ─── Zoom wrapper ────────────────────────────────────────────── */
+#zoom-wrapper {
+  transform-origin: top left;
+  transition: transform 0.2s ease;
+  position: relative;
+}
+
+/* ─── SVG overlay ─────────────────────────────────────────────── */
+#svg-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+
+/* ─── Schema grid ─────────────────────────────────────────────── */
+#schema-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+  position: relative; z-index: 1;
+}
+
+/* ─── Table Card ──────────────────────────────────────────────── */
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  overflow: hidden;
+  transition: box-shadow var(--transition), transform var(--transition), background var(--transition);
+  cursor: grab;
+  user-select: none;
+}
+.table-card:active { cursor: grabbing; }
+.table-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+
+/* Table header color stripe */
+.table-header {
+  padding: 0.85rem 1rem 0.75rem;
+  display: flex; align-items: center; gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.table-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.table-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text);
+}
+.field-count {
+  margin-left: auto;
+  font-size: 0.72rem; font-weight: 600;
+  color: var(--text-muted);
+  background: var(--btn-bg);
+  border-radius: 12px;
+  padding: 0.1rem 0.5rem;
+}
+
+/* Fields list */
+.fields-list { padding: 0.4rem 0; }
+.field-row {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.38rem 1rem;
+  border-radius: 6px;
+  margin: 0.1rem 0.4rem;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+  position: relative;
+}
+.field-row:hover { background: var(--surface-hover); transform: translateX(2px); }
+.field-row.pk { background: var(--pk-bg); border-left: 2px solid var(--pk-border); }
+.field-row.fk { background: var(--fk-bg); border-left: 2px solid var(--fk-border); }
+.field-row.highlighted {
+  background: var(--highlight-bg) !important;
+  transform: translateX(3px);
+  box-shadow: 0 0 0 1.5px var(--accent);
+  animation: pulse-highlight 0.4s ease;
+}
+@keyframes pulse-highlight {
+  0%   { box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
+  50%  { box-shadow: 0 0 0 6px rgba(99,102,241,0.1); }
+  100% { box-shadow: 0 0 0 1.5px var(--accent); }
+}
+
+.badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.08rem 0.36rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.badge-pk { background: var(--pk-border); color: #fff; }
+.badge-fk { background: var(--fk-border); color: #fff; }
+
+.field-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-mono);
+  flex: 1;
+}
+.field-type {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ─── Legend ──────────────────────────────────────────────────── */
+#legend {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 200;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  padding: 1rem 1.2rem;
+  box-shadow: var(--shadow);
+  min-width: 210px;
+  transition: opacity var(--transition), transform var(--transition);
+}
+#legend.hidden { opacity: 0; pointer-events: none; transform: translateY(10px); }
+.legend-title {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--text-muted); text-transform: uppercase;
+  margin-bottom: 0.7rem;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 0.35rem; font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.legend-line {
+  width: 28px; height: 3px; border-radius: 2px; flex-shrink: 0;
+}
+
+/* ─── Tooltip ─────────────────────────────────────────────────── */
+#tooltip {
+  position: fixed; z-index: 999; pointer-events: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.5rem 0.85rem;
+  font-size: 0.78rem; color: var(--text-mono);
+  box-shadow: var(--shadow-hover);
+  backdrop-filter: blur(12px);
+  opacity: 0; transition: opacity 0.15s;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+#tooltip.show { opacity: 1; }
+
+/* ─── Status bar ──────────────────────────────────────────────── */
+#status-bar {
+  position: fixed; bottom: 1.5rem; left: 1.5rem; z-index: 200;
+  font-size: 0.73rem; color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.35rem 0.8rem;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+  transition: all var(--transition);
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  #app { padding: 1rem; }
+  header { padding: 0 1rem; }
+  .logo span { display: none; }
+  #legend { display: none; }
+}
+</style>
+</head>
+<body data-theme="light">
+
+<!-- ─── Header ─────────────────────────────────────────────────── -->
+<header>
+  <div class="header-left">
+    <div class="logo">DB<span>/</span>SCHEMA</div>
+  </div>
+  <div class="header-right">
+    <div class="zoom-controls">
+      <button class="btn" id="btn-zoom-out" title="Zoom Out">−</button>
+      <button class="btn" id="btn-zoom-reset" title="Reset Zoom">100%</button>
+      <button class="btn" id="btn-zoom-in" title="Zoom In">+</button>
+    </div>
+    <button class="btn active" id="btn-relationships">⟷ Relationships</button>
+    <button class="btn" id="btn-legend">◉ Legend</button>
+    <button class="btn-theme" id="btn-theme" title="Toggle Theme">🌙</button>
+  </div>
+</header>
+
+<!-- ─── Main App ────────────────────────────────────────────────── -->
+<div id="app">
+  <div id="zoom-wrapper">
+    <!-- SVG for connection lines (drawn behind table cards) -->
+    <svg id="svg-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+    <!-- Schema grid filled by JS -->
+    <div id="schema-grid"></div>
+  </div>
+</div>
+
+<!-- ─── Legend ──────────────────────────────────────────────────── -->
+<div id="legend">
+  <div class="legend-title">Relationships</div>
+  <div id="legend-items"></div>
+  <div style="margin-top:0.8rem; border-top:1px solid var(--border); padding-top:0.65rem;">
+    <div class="legend-item"><span style="width:14px;height:14px;background:var(--pk-bg);border:1.5px solid var(--pk-border);border-radius:3px;display:inline-block;flex-shrink:0"></span> Primary Key</div>
+    <div class="legend-item"><span style="width:14px;height:14px;background:var(--fk-bg);border:1.5px solid var(--fk-border);border-radius:3px;display:inline-block;flex-shrink:0"></span> Foreign Key</div>
+  </div>
+</div>
+
+<!-- ─── Tooltip ─────────────────────────────────────────────────── -->
+<div id="tooltip"></div>
+
+<!-- ─── Status ──────────────────────────────────────────────────── -->
+<div id="status-bar">Click a field to highlight relationships</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   DATABASE SCHEMA VISUALIZER
+   - Renders table cards from schema definition
+   - Draws SVG bezier lines for FK relationships
+   - Click-to-highlight fields + connections
+   - Dark/light theme, zoom, drag, legend, tooltips
+   ════════════════════════════════════════════════════════════════ */
+
+// ─── 1. SCHEMA DEFINITION ──────────────────────────────────────
+const SCHEMA = [
+  {
+    id: 'users', name: 'Users', color: '#6366f1',
+    fields: [
+      { name: 'id',            type: 'bigint',    pk: true  },
+      { name: 'name',          type: 'varchar'              },
+      { name: 'mobile_number', type: 'varchar'              },
+      { name: 'password',      type: 'varchar'              },
+      { name: 'role',          type: 'enum'                 },
+      { name: 'created_at',    type: 'timestamp'            },
+    ]
+  },
+  {
+    id: 'districts', name: 'Districts', color: '#0ea5e9',
+    fields: [
+      { name: 'id',         type: 'bigint',    pk: true },
+      { name: 'name',       type: 'varchar'             },
+      { name: 'created_at', type: 'timestamp'           },
+    ]
+  },
+  {
+    id: 'thanas', name: 'Thanas', color: '#10b981',
+    fields: [
+      { name: 'id',          type: 'bigint',    pk: true  },
+      { name: 'district_id', type: 'bigint',    fk: 'districts.id' },
+      { name: 'name',        type: 'varchar'              },
+      { name: 'created_at',  type: 'timestamp'            },
+    ]
+  },
+  {
+    id: 'areas', name: 'Areas', color: '#f59e0b',
+    fields: [
+      { name: 'id',          type: 'bigint',    pk: true  },
+      { name: 'district_id', type: 'bigint',    fk: 'districts.id' },
+      { name: 'thana_id',    type: 'bigint',    fk: 'thanas.id'    },
+      { name: 'created_at',  type: 'timestamp'            },
+    ]
+  },
+  {
+    id: 'hubs', name: 'Hubs', color: '#ef4444',
+    fields: [
+      { name: 'id',          type: 'bigint',    pk: true  },
+      { name: 'district_id', type: 'bigint',    fk: 'districts.id' },
+      { name: 'thana_id',    type: 'bigint',    fk: 'thanas.id'    },
+      { name: 'area_id',     type: 'bigint',    fk: 'areas.id'     },
+      { name: 'hub_manager', type: 'bigint',    fk: 'users.id'     },
+      { name: 'created_at',  type: 'timestamp'            },
+      { name: 'updated_at',  type: 'timestamp'            },
+    ]
+  },
+  {
+    id: 'shops', name: 'Shops', color: '#8b5cf6',
+    fields: [
+      { name: 'id',          type: 'bigint',    pk: true  },
+      { name: 'name',        type: 'varchar'              },
+      { name: 'merchant_id', type: 'bigint',    fk: 'users.id'     },
+      { name: 'hub_id',      type: 'bigint',    fk: 'hubs.id'      },
+      { name: 'hub_manager', type: 'text'                 },
+      { name: 'created_at',  type: 'timestamp'            },
+    ]
+  },
+  {
+    id: 'parcels', name: 'Parcels', color: '#f43f5e',
+    fields: [
+      { name: 'id',               type: 'bigint',    pk: true  },
+      { name: 'customer_name',    type: 'varchar'              },
+      { name: 'customer_phone',   type: 'varchar'              },
+      { name: 'customer_address', type: 'text'                 },
+      { name: 'hub_id',           type: 'bigint',    fk: 'hubs.id'      },
+      { name: 'shop_id',          type: 'bigint',    fk: 'shops.id'     },
+      { name: 'merchant_id',      type: 'bigint',    fk: 'users.id'     },
+      { name: 'weight',           type: 'decimal'              },
+      { name: 'amount',           type: 'decimal'              },
+      { name: 'status',           type: 'varchar'              },
+      { name: 'delivery_man',     type: 'bigint',    fk: 'users.id'     },
+    ]
+  },
+  {
+    id: 'parcel_history', name: 'Parcel History', color: '#06b6d4',
+    fields: [
+      { name: 'id',         type: 'bigint',    pk: true  },
+      { name: 'parcel_id',  type: 'bigint',    fk: 'parcels.id' },
+      { name: 'hub_id',     type: 'bigint',    fk: 'hubs.id'    },
+      { name: 'details',    type: 'text'                 },
+      { name: 'created_at', type: 'timestamp'            },
+    ]
+  },
+];
+
+// ─── 2. BUILD RELATIONSHIP MAP ─────────────────────────────────
+// Each FK connection gets a unique color for its group
+const REL_COLORS = [
+  '#6366f1','#0ea5e9','#10b981','#f59e0b',
+  '#ef4444','#8b5cf6','#f43f5e','#06b6d4',
+  '#84cc16','#ec4899','#fb923c','#14b8a6',
+];
+let relColorIndex = 0;
+// Map: "tableId.fieldName" → { color, targets: [...] }
+const fieldRelMap = new Map();
+// All edge definitions: { fromKey, toKey, color }
+const EDGES = [];
+
+function buildRelationships() {
+  // Group all fk references by the target "tableId.fieldName"
+  const relGroups = new Map(); // target → [{fromTable, fromField}]
+
+  SCHEMA.forEach(table => {
+    table.fields.forEach(field => {
+      if (!field.fk) return;
+      const [tgt_table, tgt_field] = field.fk.split('.');
+      const fromKey = `${table.id}.${field.name}`;
+      const toKey   = `${tgt_table}.${tgt_field}`;
+
+      // Assign color per unique (fromKey, toKey) pair
+      // But group by same toKey for consistent color
+      let color;
+      if (relGroups.has(toKey)) {
+        color = relGroups.get(toKey).color;
+      } else {
+        color = REL_COLORS[relColorIndex % REL_COLORS.length];
+        relColorIndex++;
+        relGroups.set(toKey, { color });
+      }
+
+      EDGES.push({ fromKey, toKey, color });
+
+      // Update field → color map (field can appear in multiple relations)
+      if (!fieldRelMap.has(fromKey)) fieldRelMap.set(fromKey, { colors: [], targets: [] });
+      if (!fieldRelMap.has(toKey))   fieldRelMap.set(toKey,   { colors: [], targets: [] });
+      fieldRelMap.get(fromKey).colors.push(color);
+      fieldRelMap.get(fromKey).targets.push(toKey);
+      fieldRelMap.get(toKey).colors.push(color);
+      fieldRelMap.get(toKey).targets.push(fromKey);
+    });
+  });
+}
+
+// ─── 3. RENDER TABLE CARDS ─────────────────────────────────────
+function renderCards() {
+  const grid = document.getElementById('schema-grid');
+  grid.innerHTML = '';
+
+  SCHEMA.forEach(table => {
+    const card = document.createElement('div');
+    card.className = 'table-card';
+    card.id = `card-${table.id}`;
+    card.dataset.tableId = table.id;
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'table-header';
+    header.innerHTML = `
+      <div class="table-dot" style="background:${table.color}"></div>
+      <div class="table-name">${table.name}</div>
+      <div class="field-count">${table.fields.length} fields</div>
+    `;
+    header.style.borderTop = `3px solid ${table.color}`;
+    card.appendChild(header);
+
+    // Fields
+    const fieldsList = document.createElement('div');
+    fieldsList.className = 'fields-list';
+
+    table.fields.forEach(field => {
+      const row = document.createElement('div');
+      const fieldKey = `${table.id}.${field.name}`;
+      row.className = 'field-row' + (field.pk ? ' pk' : field.fk ? ' fk' : '');
+      row.id = `field-${fieldKey.replace(/\./g, '_')}`;
+      row.dataset.fieldKey = fieldKey;
+
+      let badges = '';
+      if (field.pk) badges += `<span class="badge badge-pk">PK</span>`;
+      if (field.fk) badges += `<span class="badge badge-fk">FK</span>`;
+
+      row.innerHTML = `
+        ${badges}
+        <span class="field-name">${field.name}</span>
+        <span class="field-type">${field.type}</span>
+      `;
+
+      // Click → highlight connected fields
+      row.addEventListener('click', () => onFieldClick(fieldKey));
+
+      // Hover → tooltip
+      if (field.fk) {
+        row.addEventListener('mouseenter', e => showTooltip(e, `→ ${field.fk}`));
+        row.addEventListener('mousemove',  e => moveTooltip(e));
+        row.addEventListener('mouseleave', hideTooltip);
+      }
+
+      fieldsList.appendChild(row);
+    });
+
+    card.appendChild(fieldsList);
+    grid.appendChild(card);
+
+    // Make card draggable
+    makeDraggable(card);
+  });
+}
+
+// ─── 4. DRAG & DROP ────────────────────────────────────────────
+function makeDraggable(card) {
+  let startX, startY, origLeft, origTop, dragging = false;
+
+  const onMouseDown = e => {
+    // Only drag from header
+    if (!e.target.closest('.table-header')) return;
+    dragging = true;
+    const rect = card.getBoundingClientRect();
+    const wrapRect = document.getElementById('zoom-wrapper').getBoundingClientRect();
+    startX = e.clientX;
+    startY = e.clientY;
+    origLeft = (rect.left - wrapRect.left) / currentZoom;
+    origTop  = (rect.top  - wrapRect.top)  / currentZoom;
+    card.style.position = 'absolute';
+    card.style.left = origLeft + 'px';
+    card.style.top  = origTop  + 'px';
+    card.style.width = rect.width + 'px';
+    card.style.zIndex = 50;
+    // Pull out of grid flow
+    card.style.margin = '0';
+    document.body.style.cursor = 'grabbing';
+    e.preventDefault();
+  };
+
+  const onMouseMove = e => {
+    if (!dragging) return;
+    const dx = (e.clientX - startX) / currentZoom;
+    const dy = (e.clientY - startY) / currentZoom;
+    card.style.left = (origLeft + dx) + 'px';
+    card.style.top  = (origTop  + dy) + 'px';
+    requestAnimationFrame(drawLines);
+  };
+
+  const onMouseUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    card.style.zIndex = '';
+    document.body.style.cursor = '';
+    drawLines();
+  };
+
+  card.addEventListener('mousedown', onMouseDown);
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+}
+
+// ─── 5. SVG LINE DRAWING ───────────────────────────────────────
+let showRelationships = true;
+
+// Get center of a field row element in zoom-wrapper coords
+function getFieldCenter(fieldKey) {
+  const id = `field-${fieldKey.replace(/\./g, '_')}`;
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const wrapper = document.getElementById('zoom-wrapper');
+  const elRect  = el.getBoundingClientRect();
+  const wrRect  = wrapper.getBoundingClientRect();
+  const x = (elRect.left + elRect.right)  / 2 - wrRect.left;
+  const y = (elRect.top  + elRect.bottom) / 2 - wrRect.top;
+  return { x: x / currentZoom, y: y / currentZoom };
+}
+
+// Get right or left edge midpoint of a card
+function getCardEdge(fieldKey, side) {
+  const parts = fieldKey.split('.');
+  const tableId = parts[0];
+  const card = document.getElementById(`card-${tableId}`);
+  if (!card) return null;
+  const id = `field-${fieldKey.replace(/\./g, '_')}`;
+  const el = document.getElementById(id);
+  if (!el || !card) return null;
+  const wrapper = document.getElementById('zoom-wrapper');
+  const wrRect  = wrapper.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+  const elRect   = el.getBoundingClientRect();
+  const midY = (elRect.top + elRect.bottom) / 2 - wrRect.top;
+  const x = side === 'right'
+    ? (cardRect.right  - wrRect.left)
+    : (cardRect.left   - wrRect.left);
+  return { x: x / currentZoom, y: midY / currentZoom };
+}
+
+function drawLines() {
+  const svg = document.getElementById('svg-overlay');
+  // Resize SVG to match zoom-wrapper content
+  const wrapper = document.getElementById('zoom-wrapper');
+  svg.setAttribute('width',  wrapper.scrollWidth);
+  svg.setAttribute('height', wrapper.scrollHeight);
+  svg.innerHTML = ''; // clear
+
+  if (!showRelationships) return;
+
+  // Add defs for markers (arrowheads)
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  const usedColors = new Set(EDGES.map(e => e.color));
+  usedColors.forEach(color => {
+    const markerId = `arrow-${color.replace('#','')}`;
+    defs.innerHTML += `
+      <marker id="${markerId}" markerWidth="6" markerHeight="6"
+              refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L6,3 z" fill="${color}" opacity="0.8"/>
+      </marker>`;
+  });
+  svg.appendChild(defs);
+
+  EDGES.forEach(({ fromKey, toKey, color }) => {
+    const from = getCardEdge(fromKey, 'auto');
+    const to   = getCardEdge(toKey,   'auto');
+    if (!from || !to) return;
+
+    // Determine exit/entry sides based on relative positions
+    let fromPt, toPt;
+    if (from.x < to.x) {
+      fromPt = getCardEdge(fromKey, 'right');
+      toPt   = getCardEdge(toKey,   'left');
+    } else {
+      fromPt = getCardEdge(fromKey, 'left');
+      toPt   = getCardEdge(toKey,   'right');
+    }
+    if (!fromPt || !toPt) return;
+
+    const dx = Math.abs(toPt.x - fromPt.x);
+    const cx = Math.min(dx * 0.5, 120);
+
+    const cpx1 = fromPt.x + (fromPt.x < toPt.x ?  cx : -cx);
+    const cpy1 = fromPt.y;
+    const cpx2 = toPt.x   + (fromPt.x < toPt.x ? -cx :  cx);
+    const cpy2 = toPt.y;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const d = `M${fromPt.x},${fromPt.y} C${cpx1},${cpy1} ${cpx2},${cpy2} ${toPt.x},${toPt.y}`;
+    const markerId = `arrow-${color.replace('#','')}`;
+
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '1.8');
+    path.setAttribute('stroke-opacity', '0.45');
+    path.setAttribute('marker-end', `url(#${markerId})`);
+    path.setAttribute('class', `rel-line from-${fromKey.replace(/\./g,'_')} to-${toKey.replace(/\./g,'_')}`);
+    path.dataset.fromKey = fromKey;
+    path.dataset.toKey   = toKey;
+    path.dataset.color   = color;
+
+    // Hover to show tooltip
+    path.style.pointerEvents = 'stroke';
+    path.style.cursor = 'pointer';
+    path.addEventListener('mouseenter', e => {
+      const fk = fromKey.split('.')[1];
+      const tk = toKey;
+      showTooltip(e, `${fromKey} → ${tk}`);
+      path.setAttribute('stroke-opacity', '0.9');
+      path.setAttribute('stroke-width', '3');
+    });
+    path.addEventListener('mousemove', moveTooltip);
+    path.addEventListener('mouseleave', () => {
+      hideTooltip();
+      path.setAttribute('stroke-opacity', '0.45');
+      path.setAttribute('stroke-width', '1.8');
+    });
+
+    svg.appendChild(path);
+  });
+}
+
+// ─── 6. FIELD CLICK → HIGHLIGHT ───────────────────────────────
+let activeField = null;
+
+function onFieldClick(fieldKey) {
+  const svg = document.getElementById('svg-overlay');
+
+  // If clicking same field, deselect
+  if (activeField === fieldKey) {
+    clearHighlights();
+    activeField = null;
+    updateStatus('Click a field to highlight relationships');
+    return;
+  }
+  clearHighlights();
+  activeField = fieldKey;
+
+  const rel = fieldRelMap.get(fieldKey);
+  if (!rel || rel.targets.length === 0) {
+    // No relations — just highlight self
+    highlightField(fieldKey, '#6366f1');
+    updateStatus(`${fieldKey} — no relationships`);
+    return;
+  }
+
+  // Use the first color for the background; multi-color for lines
+  const mainColor = rel.colors[0];
+
+  // Highlight source field
+  highlightField(fieldKey, mainColor);
+
+  // Highlight all related fields with same color group
+  rel.targets.forEach((targetKey, i) => {
+    highlightField(targetKey, rel.colors[i] || mainColor);
+  });
+
+  // Highlight matching SVG lines
+  const lines = svg.querySelectorAll('.rel-line');
+  lines.forEach(line => {
+    const fk = line.dataset.fromKey;
+    const tk = line.dataset.toKey;
+    if (fk === fieldKey || tk === fieldKey) {
+      line.setAttribute('stroke-opacity', '1');
+      line.setAttribute('stroke-width', '3');
+    } else {
+      line.setAttribute('stroke-opacity', '0.07');
+      line.setAttribute('stroke-width', '1.5');
+    }
+  });
+
+  const count = rel.targets.length;
+  updateStatus(`${fieldKey} — ${count} relationship${count > 1 ? 's' : ''} highlighted`);
+}
+
+function highlightField(fieldKey, color) {
+  const id = `field-${fieldKey.replace(/\./g, '_')}`;
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('highlighted');
+    el.style.setProperty('--highlight-bg', color + '22');
+    el.style.boxShadow = `0 0 0 2px ${color}`;
+    el.style.background = color + '18';
+  }
+}
+
+function clearHighlights() {
+  document.querySelectorAll('.field-row.highlighted').forEach(el => {
+    el.classList.remove('highlighted');
+    el.style.boxShadow = '';
+    el.style.background = '';
+  });
+  const svg = document.getElementById('svg-overlay');
+  svg.querySelectorAll('.rel-line').forEach(line => {
+    line.setAttribute('stroke-opacity', '0.45');
+    line.setAttribute('stroke-width', '1.8');
+  });
+}
+
+// ─── 7. LEGEND ─────────────────────────────────────────────────
+function buildLegend() {
+  // Collect unique relationships by target table
+  const seen = new Map();
+  EDGES.forEach(({ fromKey, toKey, color }) => {
+    const label = `${fromKey} → ${toKey}`;
+    if (!seen.has(color)) seen.set(color, []);
+    seen.get(color).push(`${fromKey.split('.')[0]} → ${toKey.split('.')[0]}`);
+  });
+
+  // Deduplicate per color
+  const legendItems = document.getElementById('legend-items');
+  legendItems.innerHTML = '';
+  seen.forEach((labels, color) => {
+    const unique = [...new Set(labels)];
+    unique.slice(0, 2).forEach(label => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = `
+        <div class="legend-line" style="background:${color}"></div>
+        <span>${label}</span>`;
+      legendItems.appendChild(item);
+    });
+  });
+}
+
+// ─── 8. TOOLTIP ────────────────────────────────────────────────
+const tooltip = document.getElementById('tooltip');
+function showTooltip(e, text) {
+  tooltip.textContent = text;
+  tooltip.classList.add('show');
+  moveTooltip(e);
+}
+function moveTooltip(e) {
+  tooltip.style.left = (e.clientX + 14) + 'px';
+  tooltip.style.top  = (e.clientY - 28) + 'px';
+}
+function hideTooltip() { tooltip.classList.remove('show'); }
+
+// ─── 9. STATUS BAR ─────────────────────────────────────────────
+function updateStatus(msg) {
+  document.getElementById('status-bar').textContent = msg;
+}
+
+// ─── 10. ZOOM ──────────────────────────────────────────────────
+let currentZoom = 1;
+const ZOOM_STEP = 0.1;
+const ZOOM_MIN  = 0.4;
+const ZOOM_MAX  = 2.0;
+
+function applyZoom() {
+  const wrapper = document.getElementById('zoom-wrapper');
+  wrapper.style.transform = `scale(${currentZoom})`;
+  document.getElementById('btn-zoom-reset').textContent = Math.round(currentZoom * 100) + '%';
+  setTimeout(drawLines, 50);
+}
+
+document.getElementById('btn-zoom-in').addEventListener('click', () => {
+  currentZoom = Math.min(ZOOM_MAX, +(currentZoom + ZOOM_STEP).toFixed(2));
+  applyZoom();
+});
+document.getElementById('btn-zoom-out').addEventListener('click', () => {
+  currentZoom = Math.max(ZOOM_MIN, +(currentZoom - ZOOM_STEP).toFixed(2));
+  applyZoom();
+});
+document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+  currentZoom = 1;
+  applyZoom();
+});
+
+// Mouse wheel zoom
+document.getElementById('app').addEventListener('wheel', e => {
+  if (!e.ctrlKey && !e.metaKey) return;
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+  currentZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, +(currentZoom + delta).toFixed(2)));
+  applyZoom();
+}, { passive: false });
+
+// ─── 11. TOGGLE RELATIONSHIPS ──────────────────────────────────
+document.getElementById('btn-relationships').addEventListener('click', function() {
+  showRelationships = !showRelationships;
+  this.classList.toggle('active', showRelationships);
+  this.textContent = showRelationships ? '⟷ Relationships' : '⟷ Relationships';
+  drawLines();
+});
+
+// ─── 12. TOGGLE LEGEND ─────────────────────────────────────────
+const legendEl = document.getElementById('legend');
+let legendVisible = true;
+document.getElementById('btn-legend').addEventListener('click', function() {
+  legendVisible = !legendVisible;
+  legendEl.classList.toggle('hidden', !legendVisible);
+  this.classList.toggle('active', legendVisible);
+});
+
+// ─── 13. DARK / LIGHT THEME ────────────────────────────────────
+const btnTheme = document.getElementById('btn-theme');
+let isDark = localStorage.getItem('schema-theme') === 'dark';
+
+function applyTheme() {
+  document.body.dataset.theme = isDark ? 'dark' : 'light';
+  btnTheme.textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('schema-theme', isDark ? 'dark' : 'light');
+  setTimeout(drawLines, 100);
+}
+btnTheme.addEventListener('click', () => { isDark = !isDark; applyTheme(); });
+
+// ─── 14. RESIZE OBSERVER → REDRAW ──────────────────────────────
+const ro = new ResizeObserver(() => drawLines());
+ro.observe(document.getElementById('schema-grid'));
+
+// ─── 15. INIT ──────────────────────────────────────────────────
+(function init() {
+  applyTheme();
+  buildRelationships();
+  renderCards();
+  buildLegend();
+
+  // Initial draw after layout settles
+  requestAnimationFrame(() => {
+    setTimeout(drawLines, 200);
+  });
+
+  // Redraw on window resize
+  window.addEventListener('resize', drawLines);
+})();
+</script>
+</body>
+</html>
