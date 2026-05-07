@@ -59,14 +59,3 @@ INSERT INTO hubs (name, address) VALUES
   ('Chattogram Hub', 'Agrabad C/A, Chattogram-4100'),
   ('Sylhet Hub', 'Zindabazar, Sylhet-3100'),
   ('Khulna Hub', 'Sonadanga, Khulna-9100');
-
--- Contact form messages
-CREATE TABLE IF NOT EXISTS contact_messages (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(120) NOT NULL,
-  email VARCHAR(160) NOT NULL,
-  phone VARCHAR(40) DEFAULT NULL,
-  subject VARCHAR(200) DEFAULT NULL,
-  message TEXT NOT NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
